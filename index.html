@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PresensiKu - Absensi Kilat</title>
+  
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --success: #16a34a;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      color: var(--primary);
+      font-size: 24px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 15px; /* Dibuat lebih besar agar mudah diketik di HP */
+    }
+
+    /* Tombol Aksi Kilat */
+    .btn-kilat {
+      width: 100%;
+      background-color: var(--success);
+      color: white;
+      padding: 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-kilat:hover {
+      background-color: #15803d;
+    }
+
+    /* Daftar Kehadiran Ringkas */
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .badge-hadir {
+      background-color: #dcfce7;
+      color: var(--success);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body onload="muatDataTersimpan()">
+
+  <div class="container">
+    <header>
+      <h1>⚡ PresensiKilat</h1>
+      <p>Absensi Super Cepat Tanpa Ribet</p>
+    </header>
+
+    <!-- Form Input Kilat -->
+    <div class="card">
+      <div class="form-group">
+        <label for="nama">Nama Lengkap:</label>
+        <!-- Tombol input diset otomatis fokus dan menyimpan memori browser -->
+        <input type="text" id="nama" placeholder="Ketik nama Anda di sini..." autofocus>
+      </div>
+
+      <div class="form-group">
+        <label for="kelas">Kelas / Kelompok:</label>
+        <input type="text" id="kelas" placeholder="Contoh: XI RPL 2">
+      </div>
+
+      <!-- Tombol langsung eksekusi tanpa pilihan status rumit (Default langsung HADIR) -->
+      <button class="btn-kilat" onclick="absenKilat()">✅ Hadirkan Saya Sekarang</button>
+    </div>
+
+    <!-- Live Preview Ringkas -->
+    <div class="card">
+      <h3 style="font-size: 15px; margin-bottom: 10px;">Peserta Terakhir Masuk (<span id="jumlahHadir">0</span>)</h3>
+      <div id="daftarTerakhir">
+        <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Belum ada data.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let dataAbsen = [];
+
+    // Fitur Pengeatetan Memori: Memuat nama otomatis jika pernah isi sebelumnya
+    function muatDataTersimpan() {
+      const simpanNama = localStorage.getItem('presensi_nama');
+      const simpanKelas = localStorage.getItem('presensi_kelas');
+      if (simpanNama) document.getElementById('nama').value = simpanNama;
+      if (simpanKelas) document.getElementById('kelas').value = simpanKelas;
+    }
+
+    function absenKilat() {
+      const nama = document.getElementById('nama').value.trim();
+      const kelas = document.getElementById('kelas').value.trim();
+
+      if (!nama || !kelas) {
+        alert("Mohon isi nama dan kelas terlebih dahulu!");
+        return;
+      }
+
+      // Simpan memori ke browser pengguna agar sesi berikutnya otomatis terisi
+      localStorage.setItem('presensi_nama', nama);
+      localStorage.setItem('presensi_kelas', kelas);
+
+      // Masukkan ke data array teratas
+      dataAbsen.unshift({ nama, kelas, waktu: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+
+      perbaruiTampilan();
+
+      // Kosongkan nama saja agar orang selanjutnya bisa langsung isi dengan cepat
+      document.getElementById('nama').value = '';
+      document.getElementById('nama').focus(); // Kursor otomatis kembali ke kolom nama
+    }
+
+    function perbaruiTampilan() {
+      const container = document.getElementById('daftarTerakhir');
+      container.innerHTML = '';
+      
+      document.getElementById('jumlahHadir').innerText = dataAbsen.length;
+
+      // Batasi tampilkan 5 data terakhir agar akses render tetap ringan
+      const dataTampil = dataAbsen.slice(0, 5);
+
+      dataTampil.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.innerHTML = `
+          <span><strong>${item.nama}</strong> (${item.kelas}) <br><small style="color:var(--text-muted)">Pukul ${item.waktu}</small></span>
+          <span class="badge-hadir">HADIR</span>
+        `;
+        container.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
